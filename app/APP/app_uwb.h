@@ -9,4 +9,8 @@
 
 bool APP_UWB_ParseFrame(const uint8_t *buf, uint16_t len, AOA_Data_t *out);
 
+/* 一维卡尔曼滤波（UWB 角度/距离平滑用） */
+void  Kalman_Init(KalmanState_t *k, float q, float r);
+float Kalman_Update(KalmanState_t *k, float measurement);
+
 #endif /* __APP_UWB_H */

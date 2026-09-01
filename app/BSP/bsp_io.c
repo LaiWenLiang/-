@@ -1,11 +1,94 @@
-#include "bsp_bat.h"
+#include "bsp_io.h"
 
 /***************************************************************************************************
- * 车身电池电压检测（ADC1_IN5 / PA5，轮询单次转换）
+ * LED / 蜂鸣器 / 看门狗
+ ***************************************************************************************************/
+void BSP_Periph_Init(void)
+{
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF, ENABLE);
+
+    GPIO_InitStructure.GPIO_Pin   = LED1_PIN | LED2_PIN | BEEP_PIN;
+    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_OUT;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+    GPIO_Init(LED_GPIO, &GPIO_InitStructure);
+
+    LED1(OFF);
+    LED2(OFF);
+    BEEP(OFF);
+}
+
+/* 独立看门狗：约 1s 超时 */
+void BSP_Iwdg_Init(void)
+{
+    IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
+    IWDG_SetPrescaler(IWDG_Prescaler_32);
+    IWDG_SetReload(1000);
+    IWDG_ReloadCounter();
+    IWDG_Enable();
+}
+
+void BSP_Iwdg_Feed(void)
+{
+    IWDG_ReloadCounter();
+}
+
+/***************************************************************************************************
+ * 按键（PA0/PA1/PA4，低电平触发）
+ ***************************************************************************************************/
+void BSP_Key_Init(void)
+{
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+
+    GPIO_InitStructure.GPIO_Pin   = KEY1_PIN | KEY2_PIN | KEY3_PIN;
+    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_IN;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;   /* 上拉，按下为低电平 */
+    GPIO_Init(KEY_GPIO, &GPIO_InitStructure);
+}
+
+/* 简单消抖：连续 2 次读到同一按键按下才算有效，松手后复位 */
+uint8_t Key_Scan(void)
+{
+    static uint8_t last_key = KEY_NONE;   /* 上一次确认时的原始键值 */
+    static uint8_t press_cnt = 0;
+    uint8_t now = KEY_NONE;
+
+    if (GPIO_ReadInputDataBit(KEY_GPIO, KEY1_PIN) == Bit_RESET) now = KEY_1;
+    else if (GPIO_ReadInputDataBit(KEY_GPIO, KEY2_PIN) == Bit_RESET) now = KEY_2;
+    else if (GPIO_ReadInputDataBit(KEY_GPIO, KEY3_PIN) == Bit_RESET) now = KEY_3;
+
+    if (now == KEY_NONE)
+    {
+        last_key  = KEY_NONE;   /* 已松手，允许下一次触发 */
+        press_cnt = 0;
+        return KEY_NONE;
+    }
+
+    if (now == last_key)
+        return KEY_NONE;        /* 同一个键还按着，不重复触发 */
+
+    press_cnt++;
+    if (press_cnt >= 2)         /* 连续 2 次扫描都按下（调用周期 200ms 时约 0.4s 内有效） */
+    {
+        press_cnt = 0;
+        last_key  = now;
+        return now;
+    }
+    return KEY_NONE;
+}
+
+/***************************************************************************************************
+ * 电池电压检测（ADC1_IN5 / PA5，轮询单次转换）
  * 每 20ms 采一次，16 次滑动平均滤波（电机大电流时母线电压会抖），
  * 换算成 mV 后用电压查表法估算电量百分比。
  ***************************************************************************************************/
-
 #define BAT_AVG_NUM   16   /* 滑动平均点数 */
 
 static uint32_t s_volt_mv = 0;    /* 滤波后的电池电压 mV */

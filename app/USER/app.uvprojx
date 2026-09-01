@@ -619,11 +619,6 @@
               <FilePath>..\BSP\bsp.c</FilePath>
             </File>
             <File>
-              <FileName>bsp_periph.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\BSP\bsp_periph.c</FilePath>
-            </File>
-            <File>
               <FileName>bsp_motor.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\BSP\bsp_motor.c</FilePath>
@@ -652,6 +647,11 @@
               <FileName>bsp_can.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\BSP\bsp_can.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_io.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\BSP\bsp_io.c</FilePath>
             </File>
             <File>
               <FileName>bsp_oidmotor.c</FileName>
@@ -683,21 +683,6 @@
               <FileType>1</FileType>
               <FilePath>..\BSP\bsp_esp8266.c</FilePath>
             </File>
-            <File>
-              <FileName>bsp_token.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\BSP\bsp_token.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_key.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\BSP\bsp_key.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_bat.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\BSP\bsp_bat.c</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
@@ -714,19 +699,9 @@
               <FilePath>..\APP\app_control.c</FilePath>
             </File>
             <File>
-              <FileName>app_avoid.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\APP\app_avoid.c</FilePath>
-            </File>
-            <File>
               <FileName>app_uwb.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\app_uwb.c</FilePath>
-            </File>
-            <File>
-              <FileName>app_filter.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\APP\app_filter.c</FilePath>
             </File>
             <File>
               <FileName>app_speedloop.c</FileName>
