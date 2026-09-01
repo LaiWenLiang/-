@@ -1,4 +1,5 @@
 #include "app_uwb.h"
+#include <stdlib.h>
 
 /**************************************************************************
  * UWB 帧解析（精简移植自原工程 uwb.c）
@@ -114,4 +115,45 @@ float Kalman_Update(KalmanState_t *k, float measurement)
     k->x = k->x + kg * (measurement - k->x);
     k->p = (1.0f - kg) * k->p;
     return k->x;
+}
+
+/***************************************************************************************************
+ * 跳变滤波（移植自原工程 AOA_Angle_Filter，角度/距离共用）
+ * 调用顺序：原始值 -> 跳变滤波 -> 卡尔曼
+ ***************************************************************************************************/
+int g_jump_same = 25;    /* 同向变化阈值（原工程 same_thresh=25） */
+int g_jump_inv  = 60;    /* 异向变化阈值（原工程 inverse_thresh=60） */
+int g_jump_hold = 25;    /* 连续超限 25 次放行（原工程 output_thresh=25） */
+
+int UWB_JumpFilter(JumpFilter_t *f, int curr, int same_thresh, int inv_thresh, int hold_max)
+{
+    int delta;
+    int threshold;
+
+    if (!f->started)            /* 第一帧数据直接放行 */
+    {
+        f->last    = curr;
+        f->started = 1;
+        return curr;
+    }
+
+    delta     = curr - f->last;
+    threshold = ((f->last * curr) >= 0) ? same_thresh : inv_thresh;   /* 跨过 0 算异向 */
+
+    if (abs(delta) > threshold)
+    {
+        /* 超限：先拦下，保持上次有效值 */
+        f->hold_cnt++;
+        if (f->hold_cnt >= hold_max)
+        {
+            f->last     = curr;   /* 连续超限，认为真变了，放行 */
+            f->hold_cnt = 0;
+            return curr;
+        }
+        return f->last;
+    }
+
+    f->last     = curr;           /* 正常变化，放行 */
+    f->hold_cnt = 0;
+    return curr;
 }

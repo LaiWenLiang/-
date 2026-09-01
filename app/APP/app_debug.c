@@ -1,6 +1,7 @@
 #include "app_debug.h"
 #include "app_speedloop.h"
 #include "app_control.h"
+#include "app_uwb.h"
 #include "bsp_oidmotor.h"
 #include "usart.h"
 #include <stdlib.h>
@@ -65,6 +66,10 @@ static void Apply_Slider(const char *name, float value)
     else if (strcmp(name, "KalAngR") == 0)  { g_kf_uwb_angle.r = value; }
     else if (strcmp(name, "KalDisQ") == 0)  { g_kf_uwb_dist.q = value; }
     else if (strcmp(name, "KalDisR") == 0)  { g_kf_uwb_dist.r = value; }
+    /* 跳变滤波（UWB 野值拦截） */
+    else if (strcmp(name, "JumpSame") == 0) { g_jump_same = (int)value; }
+    else if (strcmp(name, "JumpInv") == 0)  { g_jump_inv  = (int)value; }
+    else if (strcmp(name, "JumpHold") == 0) { g_jump_hold = (int)value; }
     else
     {
         printf("unknown slider: %s\n", name);

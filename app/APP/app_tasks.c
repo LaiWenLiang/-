@@ -46,8 +46,10 @@ char    g_ota_new_ver[16] = {0};      /* OneNET 上发现的新版本号 */
  ***************************************************************************************************/
 static void Task_UWB_Parse(void *param)
 {
-    UWB_Frame_t frame;
-    AOA_Data_t  aoa;
+    UWB_Frame_t   frame;
+    AOA_Data_t    aoa;
+    static JumpFilter_t jf_angle = {0};
+    static JumpFilter_t jf_dist  = {0};
 
     Kalman_Init(&g_kf_uwb_angle, 0.05f, 1.0f);
     Kalman_Init(&g_kf_uwb_dist,  0.05f, 1.0f);
@@ -59,8 +61,17 @@ static void Task_UWB_Parse(void *param)
             if (APP_UWB_ParseFrame(frame.buf, frame.len, &aoa))
             {
                 Power_FeedAlive();   /* UWB 有数据 = 有活动 */
-                aoa.angle    = (int)Kalman_Update(&g_kf_uwb_angle, aoa.angle);
-                aoa.distance = (int)Kalman_Update(&g_kf_uwb_dist,  aoa.distance);
+
+                /* 无数据帧（角度和距离都为 0）不参与滤波，防止污染滤波器状态 */
+                if (aoa.angle != 0 || aoa.distance != 0)
+                {
+                    /* 滤波链：跳变滤波（拦野值） -> 卡尔曼（平滑噪声） */
+                    aoa.angle    = UWB_JumpFilter(&jf_angle, aoa.angle,    g_jump_same, g_jump_inv, g_jump_hold);
+                    aoa.distance = UWB_JumpFilter(&jf_dist,  aoa.distance, g_jump_same, g_jump_inv, g_jump_hold);
+                    aoa.angle    = (int)Kalman_Update(&g_kf_uwb_angle, aoa.angle);
+                    aoa.distance = (int)Kalman_Update(&g_kf_uwb_dist,  aoa.distance);
+                }
+
                 xQueueOverwrite(g_queue_aoa, &aoa);   /* 只保留最新一帧 */
                 xEventGroupSetBits(g_event_system, EVT_UWB_LINK_OK);
             }
