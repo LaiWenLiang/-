@@ -27,4 +27,8 @@ uint8_t ESP8266_ReadByte(uint8_t *ch, uint32_t timeout_ms);
 /* 清空接收缓冲 */
 void    ESP8266_FlushRx(void);
 
+/* 省电模式：拉低/拉高 RST 关断、恢复模块供电 */
+void    ESP8266_PowerDown(void);
+void    ESP8266_PowerUp(void);
+
 #endif /* __BSP_ESP8266_H */

@@ -15,6 +15,7 @@
 #include "bsp_key.h"
 #include "bsp_bat.h"
 #include "app_debug.h"
+#include "app_power.h"
 #include "app_ota.h"
 #include "app_onenet_ota.h"
 #include "ota_config.h"
@@ -61,6 +62,7 @@ static void Task_UWB_Parse(void *param)
         {
             if (APP_UWB_ParseFrame(frame.buf, frame.len, &aoa))
             {
+                Power_FeedAlive();   /* UWB 有数据 = 有活动 */
                 aoa.angle    = (int)Kalman_Update(&g_kf_uwb_angle, aoa.angle);
                 aoa.distance = (int)Kalman_Update(&g_kf_uwb_dist,  aoa.distance);
                 xQueueOverwrite(g_queue_aoa, &aoa);   /* 只保留最新一帧 */
@@ -189,6 +191,13 @@ static void Task_Control(void *param)
             continue;
         }
 
+        /* 省电态：保持停车（优先级同 OTA） */
+        if (xEventGroupGetBits(g_event_system) & EVT_POWER_SAVE)
+        {
+            Control_Execute(STOP_MOTOR, 0);
+            continue;
+        }
+
         /* OTA 升级中：保持停车，暂停一切跟随/遥控逻辑 */
         if (xEventGroupGetBits(g_event_system) & EVT_OTA_MODE)
         {
@@ -261,6 +270,18 @@ static void Task_Display(void *param)
         vTaskDelayUntil(&last, pdMS_TO_TICKS(200));
 
         key = Key_Scan();
+
+        /* 按键 = 有活动（省电态下按键就是唤醒信号） */
+        if (key != KEY_NONE)
+        {
+            Power_FeedAlive();
+        }
+
+        /* 省电态：OLED 已断电，只留按键扫描用于唤醒 */
+        if (xEventGroupGetBits(g_event_system) & EVT_POWER_SAVE)
+        {
+            continue;
+        }
 
         /* KEY3：切换 USART1 模式（升级提示出现时无效） */
         if (key == KEY_3 && g_ota_state != OTA_ST_ASK && g_ota_state != OTA_ST_UPGRADING)
@@ -366,17 +387,21 @@ static void Task_MotorCan(void *param)
     {
         vTaskDelayUntil(&last, pdMS_TO_TICKS(20));
 
-        /* 心跳：每 MOTOR_HEARTBEAT_MS 发一次 */
-        if (++beat_div >= (MOTOR_HEARTBEAT_MS / 20))
+        /* 省电态下不发电流/心跳，驱动器自动放空省电 */
+        if ((xEventGroupGetBits(g_event_system) & EVT_POWER_SAVE) == 0)
         {
-            beat_div = 0;
-            OID_Heartbeat(OID_ID_LEFT);
-            OID_Heartbeat(OID_ID_RIGHT);
-        }
+            /* 心跳：每 MOTOR_HEARTBEAT_MS 发一次 */
+            if (++beat_div >= (MOTOR_HEARTBEAT_MS / 20))
+            {
+                beat_div = 0;
+                OID_Heartbeat(OID_ID_LEFT);
+                OID_Heartbeat(OID_ID_RIGHT);
+            }
 
-        /* 轮流查询转速反馈 */
-        OID_QuerySpeed(poll_id);
-        poll_id = (poll_id == OID_ID_LEFT) ? OID_ID_RIGHT : OID_ID_LEFT;
+            /* 轮流查询转速反馈 */
+            OID_QuerySpeed(poll_id);
+            poll_id = (poll_id == OID_ID_LEFT) ? OID_ID_RIGHT : OID_ID_LEFT;
+        }
 
         /* 解析本周期收到的所有应答帧（CAN 总线只跑电机驱动器） */
         while (xQueueReceive(g_queue_can_rx, &frame, 0) == pdTRUE)
@@ -449,6 +474,7 @@ void APP_Tasks_Create(void)
     xTaskCreate(Task_Debug,    "debug",    384, NULL, 1, NULL);
     xTaskCreate(App_Ota_Task,  "ota",      384, NULL, 1, NULL);
     xTaskCreate(App_OnenetOta_Task, "onenet", 1024, NULL, 1, NULL);   /* HTTP 字符串较多，栈给大 */
+    xTaskCreate(App_Power_Task,   "power",   192, NULL, 1, NULL);
 
     /* 监控软件定时器 */
     xTimerStart(xTimerCreate("monitor", pdMS_TO_TICKS(500), pdTRUE, NULL, Timer_Monitor), 0);

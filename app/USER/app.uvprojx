@@ -753,6 +753,11 @@
               <FileType>1</FileType>
               <FilePath>..\APP\app_onenet_ota.c</FilePath>
             </File>
+            <File>
+              <FileName>app_power.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\app_power.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -121,6 +121,12 @@ void BSP_OLED_Init(void)
     OLED_WriteCmd(0xAF); /* 开显示 */
 }
 
+/* 显示开关：on=1 开显示(0xAF)，on=0 关显示(0xAE)，省电模式用 */
+void BSP_OLED_DisplayOnOff(uint8_t on)
+{
+    OLED_WriteCmd(on ? 0xAF : 0xAE);
+}
+
 void BSP_OLED_Clear(void)
 {
     uint8_t page, i;

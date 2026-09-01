@@ -81,6 +81,19 @@ void ESP8266_Init(void)
     NVIC_Init(&NVIC_InitStructure);
 }
 
+/* 省电：拉低 RST 关掉模块（省约 70mA）；重新上电由调用方做 */
+void ESP8266_PowerDown(void)
+{
+    ESP_RST_LOW();
+}
+
+/* 恢复供电：拉高 RST，等模块启动（AT 固件启动约 1 秒） */
+void ESP8266_PowerUp(void)
+{
+    ESP_RST_HIGH();
+    vTaskDelay(pdMS_TO_TICKS(1200));
+}
+
 void ESP8266_SendRaw(const uint8_t *data, uint16_t len)
 {
     while (len--)

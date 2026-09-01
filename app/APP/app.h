@@ -53,6 +53,7 @@ typedef struct
 #define EVT_OBSTACLE_WARN   (1 << 3)
 #define EVT_REMOTE_ACTIVE   (1 << 4)
 #define EVT_OTA_MODE        (1 << 5)   /* OTA 升级中：控制任务保持停车 */
+#define EVT_POWER_SAVE      (1 << 6)   /* 省电态：停车、停心跳、外设断电 */
 
 /* 全局 RTOS 对象（app_tasks.c 创建） */
 extern QueueHandle_t      g_queue_uwb_rx;    /* UWB 原始帧 */
