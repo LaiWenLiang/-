@@ -17,7 +17,7 @@ int main(void)
     /* Init SysTick at HCLK for the OS-aware delay + FreeRTOS tick. */
     delay_init(168);
 
-    /* 底层硬件：LED/蜂鸣器/电机PWM/TOF/OLED/语音/看门狗 */
+    /* 底层硬件：LED/蜂鸣器/TOF/OLED/语音/看门狗（电机走 CAN，由 APP 层初始化） */
     BSP_Init();
 
     /* 创建队列/互斥锁/事件组/任务，并初始化 UWB 串口 */

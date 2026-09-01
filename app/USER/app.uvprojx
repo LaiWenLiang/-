@@ -619,11 +619,6 @@
               <FilePath>..\BSP\bsp.c</FilePath>
             </File>
             <File>
-              <FileName>bsp_motor.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\BSP\bsp_motor.c</FilePath>
-            </File>
-            <File>
               <FileName>bsp_i2c.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\BSP\bsp_i2c.c</FilePath>
