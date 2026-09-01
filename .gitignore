@@ -1,0 +1,33 @@
+# Keil MDK 编译产物
+Objects/
+Listings/
+*.o
+*.d
+*.crf
+*.lnp
+*.hex
+*.bin
+*.axf
+*.map
+*.htm
+*.sct
+*.dep
+
+# Keil 用户个人配置（每台电脑不同，不上传）
+*.uvguix.*
+*.uvoptx
+*.bak
+*.plg
+
+# J-Link / 调试配置
+JLinkLog.txt
+*.jlink
+DebugConfig/
+
+# Python
+__pycache__/
+*.pyc
+
+# 系统垃圾
+Thumbs.db
+.DS_Store

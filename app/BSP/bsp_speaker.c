@@ -1,0 +1,28 @@
+#include "bsp_speaker.h"
+#include "usart.h"
+
+/* 语音芯片指令帧（沿用原工程协议 0xAA 头） */
+static const uint8_t s_cmd_table[][6] =
+{
+    [VOICE_WELCOME]             = {0xAA, 0x07, 0x02, 0x00, 0x01, 0xB4},
+    [VOICE_REMOTE_MODE]         = {0xAA, 0x07, 0x02, 0x00, 0x02, 0xB5},
+    [VOICE_FOLLOW_MODE]         = {0xAA, 0x07, 0x02, 0x00, 0x03, 0xB6},
+    [VOICE_SPEED_LOW]           = {0xAA, 0x07, 0x02, 0x00, 0x04, 0xB7},
+    [VOICE_SPEED_HIGH]          = {0xAA, 0x07, 0x02, 0x00, 0x05, 0xB8},
+    [VOICE_REMOTE_LOW_BATTERY]  = {0xAA, 0x07, 0x02, 0x00, 0x06, 0xB9},
+    [VOICE_CAR_LOW_BATTERY]     = {0xAA, 0x07, 0x02, 0x00, 0x07, 0xBA},
+};
+
+void BSP_Speaker_Init(void)
+{
+    Speaker_UART_Init(9600);
+}
+
+void BSP_Speaker_Play(VoiceId_t id)
+{
+    if (id <= VOICE_NONE || id > VOICE_CAR_LOW_BATTERY)
+    {
+        return;
+    }
+    Speaker_UART_Send(s_cmd_table[id], 6);
+}

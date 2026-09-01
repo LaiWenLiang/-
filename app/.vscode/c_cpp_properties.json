@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "d:/桌面/嵌入式/stm32f407freertos模版/app/libRich",
+                "c:/Users/20711/.vscode/extensions/richintelligent.richextension-4.0.1/include",
+                "c:/Users/20711/.vscode/extensions/richintelligent.richextension-4.0.1/include/Atmel"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE",
+                "interrupt=",
+                "code=",
+                "xdata="
+            ],
+            "cStandard": "c89",
+            "forcedInclude": [
+                "c:/Users/20711/.vscode/extensions/richintelligent.richextension-4.0.1/include/libRichForced.h"
+            ]
+        }
+    ],
+    "version": 4
+}
